@@ -37,8 +37,8 @@ func DefaultConfig() *Config {
 	cfg.Printer.EncodeWait = 500
 	cfg.Web.BindAddress = "0.0.0.0"
 	cfg.Web.Port = 8080
-	cfg.Timelapse.Enabled = false
-	cfg.Timelapse.Interval = 60
+	cfg.Timelapse.Enabled = true
+	cfg.Timelapse.Interval = 0
 	cfg.Timelapse.SavePath = "timelapse"
 	cfg.Timelapse.Fps = 20
 	return cfg
