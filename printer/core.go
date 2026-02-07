@@ -19,4 +19,6 @@ type Core interface {
 	ToggleLight()
 
 	AssembleVideo(folderName string) error
+
+	GetAppVersion() string
 }

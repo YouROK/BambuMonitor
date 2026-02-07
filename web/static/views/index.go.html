@@ -59,9 +59,15 @@
     <div class="row">
         <nav class="col-md-3 col-lg-2 d-md-block sidebar p-3">
 {{/*        Левая панель        */}}
-            <div class="d-flex align-items-center mb-4 px-2 text-white">
-                <i class="bi bi-printer-fill me-2 fs-4 text-success"></i>
-                <span class="fs-5 fw-bold text-success">Bambu Monitor</span>
+            <div class="d-flex flex-column mb-4 px-2">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-printer-fill me-2 fs-4 text-success"></i>
+                    <span class="fs-5 fw-bold text-success">Bambu Monitor</span>
+                </div>
+
+                <div class="text-secondary small" style="opacity: 75%; padding-left: 2rem; margin-top: -5px; font-size: 0.7rem;">
+                    v{{.Version}}
+                </div>
             </div>
 
             <div class="stat-card p-3 mb-3 text-center">

@@ -11,5 +11,6 @@ func (s *Server) IndexHandler(c *gin.Context) {
 		"Hostname":         s.core.GetConfig().Printer.Hostname,
 		"TimelapseEnabled": s.core.GetConfig().Timelapse.Enabled,
 		"WaitFrame":        s.core.GetConfig().Printer.EncodeWait,
+		"Version":          s.core.GetAppVersion(),
 	})
 }

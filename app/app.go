@@ -12,6 +12,8 @@ import (
 	"syscall"
 )
 
+const version = "1.0.0"
+
 type App struct {
 	cfg       *config.Config
 	lastFrame []byte
@@ -109,6 +111,10 @@ func (a *App) ToggleLight() {
 
 func (a *App) AssembleVideo(folderName string) error {
 	return a.timelaps.AssembleVideo(folderName)
+}
+
+func (a *App) GetAppVersion() string {
+	return version
 }
 
 func (a *App) Run() {
