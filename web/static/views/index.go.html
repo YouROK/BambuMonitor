@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bambu Live Go</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #0f0f0f; font-family: 'Segoe UI', sans-serif; }
+        .sidebar { min-height: 100vh; background-color: #161616; border-right: 1px solid #2d2d2d; }
+
+        /* Контейнер видео */
+        .video-wrapper-outer {
+            max-height: calc(100vh - 160px); /* Ограничиваем по высоте экрана */
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .video-container {
+            background-color: #000;
+            border-radius: 12px;
+            border: 1px solid #333;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: fit-content;
+            max-height: 100%;
+        }
+        #mjpeg-stream {
+            display: none;
+            max-width: 100%;
+            max-height: calc(100vh - 160px);
+            height: auto;
+            width: auto;
+        }
+
+        /* Заглушка при отсутствии видео */
+        .video-offline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #444;
+        }
+        .video-offline i { font-size: 4rem; }
+
+        .stat-card { background: rgba(255,255,255,0.03); border: 1px solid #2d2d2d; border-radius: 8px; }
+        .stat-label { font-size: 0.75rem; color: #888; text-uppercase: uppercase; }
+        .stat-value { font-size: 1.1rem; font-weight: 600; color: #eee; }
+
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar p-3">
+{{/*        Левая панель        */}}
+            <div class="d-flex align-items-center mb-4 px-2 text-white">
+                <i class="bi bi-printer-fill me-2 fs-4 text-success"></i>
+                <span class="fs-5 fw-bold text-success">Bambu Monitor</span>
+            </div>
+
+            <div class="stat-card p-3 mb-3 text-center">
+                <small class="stat-label d-block mb-1">Состояние</small>
+                <div id="print-state" class="fw-bold text-info fs-5">Ожидание...</div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6 text-center">
+                    <div class="stat-card p-2">
+                        <small class="stat-label">Сопло</small>
+                        <div class="stat-value"><span id="temp-nozzle">0</span>°</div>
+                    </div>
+                </div>
+                <div class="col-6 text-center">
+                    <div class="stat-card p-2">
+                        <small class="stat-label">Стол</small>
+                        <div class="stat-value"><span id="temp-bed">0</span>°</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card p-3 mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <small class="stat-label">Прогресс</small>
+                    <small id="progress-val" class="text-success fw-bold">0%</small>
+                </div>
+                <div class="progress" style="height: 6px; background: #222;">
+                    <div id="progress-bar" class="progress-bar bg-success" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="stat-card p-3 mb-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="stat-label d-block">Слои</small>
+                    <div class="stat-value"><span id="layer-cur">0</span> / <span id="layer-total">0</span></div>
+                </div>
+                <div class="text-end">
+                    <small class="stat-label d-block">Wi-Fi</small>
+                    <div class="stat-value text-info" style="font-size: 0.9rem;"><i class="bi bi-wifi"></i> <span id="wifi-val">--</span></div>
+                </div>
+            </div>
+
+            <div class="stat-card p-3 mb-3 text-center">
+                <small class="stat-label d-block mb-1">Таймлапсы</small>
+                <div id="timelaps-state" class="fw-bold text-info fs-5">{{if .TimelapseEnabled}}Вкл{{else}}Выкл{{end}}</div>
+            </div>
+
+            <div class="stat-card p-3 mb-3 d-flex justify-content-between align-items-center"
+                 onclick="toggleLight()" style="cursor: pointer; transition: 0.2s;">
+                <div>
+                    <small class="stat-label d-block">Подсветка</small>
+                    <div class="stat-value">
+                        <i id="light-icon" class="bi bi-lightbulb"></i>
+                        <span id="light-status">---</span>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div id="light-spinner" class="spinner-border spinner-border-sm text-success d-none" role="status"></div>
+                </div>
+            </div>
+{{/*        Кнопки      */}}
+            <ul class="nav nav-pills flex-column mt-4">
+                <li class="mb-2">
+                    <a href="/timelapse" class="nav-link text-white border border-secondary border-opacity-25">
+                        <i class="bi bi-camera-reels me-2 text-success"></i> Таймлапсы
+                    </a>
+                </li>
+                <li>
+                    <a href="/config" class="nav-link text-secondary border border-secondary border-opacity-25">
+                        <i class="bi bi-gear me-2"></i> Настройки
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom border-secondary">
+                <div>
+                    <h1 class="h3 mb-1" id="task-name">Live Stream</h1>
+                    <small class="text-muted">Хост: {{ .Hostname }} | Осталось: <span id="time-rem" class="text-white fw-bold">--</span> мин</small>
+                </div>
+                <div>
+                    <span id="fps-counter" class="stat-card badge px-3 py-2 text-success" style="font-family: monospace;">
+                        -- FPS
+                    </span>
+                    <span id="stream-status-badge" class="badge bg-secondary px-3 py-2">OFFLINE</span>
+                </div>
+            </div>
+
+            <div class="video-wrapper-outer">
+                <div class="video-container shadow-lg" id="video-box">
+                    <div id="offline-msg" class="video-offline">
+                        <i class="bi bi-camera-video-off mb-2"></i>
+                        <span>Нет сигнала с принтера</span>
+                    </div>
+                    <img id="mjpeg-stream">
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded',(event) => {
+        startCustomStream();
+        setInterval(updateStatus, 1000);
+        updateStatus();
+    });
+
+    async function startCustomStream() {
+        let isStreaming = true;
+        const streamImg = document.getElementById('mjpeg-stream');
+        while (isStreaming) {
+            try {
+                const response = await fetch('/snap', {
+                    signal: AbortSignal.timeout(3000),
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) throw new Error('Printer offline');
+
+                const blob = await response.blob();
+
+                const oldUrl = streamImg.src;
+                streamImg.src = URL.createObjectURL(blob);
+
+                if (oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
+
+                await new Promise(r => setTimeout(r, {{.WaitFrame}}));
+
+            } catch (err) {
+                await new Promise(r => setTimeout(r, 2000));
+            }
+        }
+    }
+
+    function toggleLight() {
+        const spinner = document.getElementById('light-spinner');
+        spinner.classList.remove('d-none'); // Показываем загрузку
+
+        fetch('/light', { method: 'POST' })
+            .then(res => {
+                if (!res.ok) throw new Error('Network response was not ok');
+            })
+            .catch(err => console.error('Ошибка переключения света:', err))
+            .finally(() => {
+                // Скрываем спиннер через полсекунды, чтобы пользователь видел отклик
+                setTimeout(() => spinner.classList.add('d-none'), 500);
+            });
+    }
+
+    function setOnline(online) {
+        const streamImg = document.getElementById('mjpeg-stream');
+        const offlineMsg = document.getElementById('offline-msg');
+        const liveBox = document.getElementById('stream-status-badge');
+
+        document.getElementById('fps-counter').hidden = !online;
+
+        if (online) {
+            streamImg.style.display = 'block';
+            offlineMsg.style.display = 'none';
+            liveBox.classList.replace('bg-secondary', 'bg-danger');
+            liveBox.innerText = 'LIVE';
+        } else {
+            streamImg.style.display = 'none';
+            offlineMsg.style.display = 'flex';
+            liveBox.classList.replace('bg-danger', 'bg-secondary');
+            liveBox.innerText = 'OFFLINE';
+        }
+    }
+
+    function updateStatus() {
+        fetch('/status')
+            .then(res => res.json())
+            .then(data => {
+                if(data.nozzle_temper) document.getElementById('temp-nozzle').innerText = data.nozzle_temper.toFixed(1);
+                if(data.bed_temper) document.getElementById('temp-bed').innerText = data.bed_temper.toFixed(1);
+                if(data.fps) document.getElementById('fps-counter').innerText = data.fps.toFixed(1) + " FPS";
+
+                setOnline(data.online);
+
+                const percent = data.mc_percent || 0;
+                document.getElementById('progress-val').innerText = percent + '%';
+                document.getElementById('progress-bar').style.width = percent + '%';
+                document.getElementById('time-rem').innerText = data.mc_remaining_time || 0;
+
+                document.getElementById('layer-cur').innerText = data.layer_num || 0;
+                document.getElementById('layer-total').innerText = data.total_layer_num || 0;
+                document.getElementById('wifi-val').innerText = data.wifi_signal || '--';
+
+                if(data.subtask_name) document.getElementById('task-name').innerText = data.subtask_name;
+
+                if(data.gcode_state) {
+                    const el = document.getElementById('print-state');
+                    el.innerText = data.gcode_state;
+                    el.className = (data.gcode_state === 'RUNNING') ? 'fw-bold text-success fs-5' : 'fw-bold text-info fs-5';
+                }
+                if (data.lights_report && data.lights_report.length > 0) {
+                    const chamberLight = data.lights_report.find(l => l.node === 'chamber_light');
+                    if (chamberLight) {
+                        const isOn = chamberLight.mode === 'on';
+                        const label = document.getElementById('light-status');
+                        const icon = document.getElementById('light-icon');
+
+                        label.innerText = isOn ? 'On' : 'Off';
+                        label.className = isOn ? 'stat-value text-warning' : 'stat-value text-secondary';
+                        icon.className = isOn ? 'bi bi-lightbulb-fill text-warning' : 'bi bi-lightbulb text-secondary';
+                    }
+                }
+            })
+            .catch(e => console.error("Status error"));
+    }
+</script>
+</body>
+</html>
