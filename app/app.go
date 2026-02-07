@@ -91,7 +91,11 @@ func (a *App) SetConfig(cfg *config.Config) {
 	a.configMutex.Lock()
 	defer a.configMutex.Unlock()
 	a.cfg = cfg
-	err := a.cfg.Save()
+	err := os.MkdirAll(a.cfg.Timelapse.SavePath, os.ModePerm)
+	if err != nil {
+		log.Println("Error creating dir for timelapse:", a.cfg.Timelapse.SavePath, "\n", err)
+	}
+	err = a.cfg.Save()
 	if err != nil {
 		log.Printf("Failed to save config: %v", err)
 	}
