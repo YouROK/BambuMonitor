@@ -12,12 +12,13 @@ PLATFORMS=(
   'darwin/arm64'
   'freebsd/amd64'
   'freebsd/arm7'
-  'linux/mips'
-  'linux/mipsle'
-  'linux/mips64'
-  'linux/mips64le'
   'linux/riscv64'
 )
+#  Disable platforms
+#    'linux/mips'
+#    'linux/mipsle'
+#    'linux/mips64'
+#    'linux/mips64le'
 
 type setopt >/dev/null 2>&1
 
@@ -55,7 +56,7 @@ echo "Build server"
 $GOBIN clean -i -r -cache
 $GOBIN mod tidy
 
-BUILD_FLAGS="-ldflags=${LDFLAGS} -tags=nosqlite -trimpath"
+BUILD_FLAGS="-ldflags=${LDFLAGS} -trimpath"
 
 #####################################
 ### PC build section
