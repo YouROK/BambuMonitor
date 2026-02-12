@@ -1,7 +1,7 @@
 package web
 
 import (
-	"bambucam/printer"
+	"bambucam/printer/timelapse"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -55,7 +55,7 @@ func (s *Server) TimelapsHandler(c *gin.Context) {
 			infoPath := filepath.Join(fullPath, "info.json")
 
 			// Читаем info.json
-			var info printer.TimelapsInfo
+			var info timelapse.TimelapsInfo
 			data, err := os.ReadFile(infoPath)
 			if err == nil {
 				json.Unmarshal(data, &info)
@@ -71,7 +71,7 @@ func (s *Server) TimelapsHandler(c *gin.Context) {
 				FolderName: entry.Name(),
 				Name:       info.Name,
 				Date:       info.StartedAt.Format("02.01.2006 15:04"),
-				Status:     info.Status,
+				Status:     info.Status.String(),
 				HasVideo:   videoErr == nil,
 				FrameCount: len(frames),
 			}

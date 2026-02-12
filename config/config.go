@@ -24,10 +24,12 @@ type Config struct {
 	} `yaml:"web"`
 
 	Timelapse struct {
-		Enabled  bool   `yaml:"enabled"`
-		Interval int    `yaml:"interval_seconds"`
-		SavePath string `yaml:"save_path"`
-		Fps      int    `yaml:"fps"`
+		Enabled    bool   `yaml:"enabled"`
+		Interval   int    `yaml:"interval_seconds"`
+		SavePath   string `yaml:"save_path"`
+		Fps        int    `yaml:"fps"`
+		AfterLayer int    `yaml:"after_layer"`
+		AddTime    bool   `yaml:"add_time"`
 	} `yaml:"timelapse"`
 }
 
@@ -41,6 +43,8 @@ func DefaultConfig() *Config {
 	cfg.Timelapse.Interval = 0
 	cfg.Timelapse.SavePath = "timelapse"
 	cfg.Timelapse.Fps = 20
+	cfg.Timelapse.AfterLayer = 0
+	cfg.Timelapse.AddTime = true
 	return cfg
 }
 

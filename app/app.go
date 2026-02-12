@@ -3,6 +3,8 @@ package app
 import (
 	"bambucam/config"
 	"bambucam/printer"
+	"bambucam/printer/mqtt"
+	"bambucam/printer/timelapse"
 	"bambucam/web"
 	"log"
 	"os"
@@ -12,7 +14,7 @@ import (
 	"syscall"
 )
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 type App struct {
 	cfg       *config.Config
@@ -24,10 +26,10 @@ type App struct {
 	configMutex sync.RWMutex
 	frameMutex  sync.RWMutex
 
-	webserver *web.Server
-	bambustat *printer.BambuStatus
-	bambucam  *printer.BambuCamera
-	timelaps  *printer.Timelaps
+	webserver    *web.Server
+	bambuManager *mqtt.BambuManager
+	bambucam     *printer.BambuCamera
+	timelapse    *timelapse.Timelapse
 }
 
 func New() *App {
@@ -104,13 +106,25 @@ func (a *App) SetConfig(cfg *config.Config) {
 }
 
 func (a *App) ToggleLight() {
-	if a.bambustat != nil {
-		a.bambustat.ToggleLight()
+	if a.bambuManager != nil {
+		a.bambuManager.ToggleLight()
+	}
+}
+
+func (a *App) StopPrinting() {
+	if a.bambuManager != nil {
+		a.bambuManager.StopPrinting()
+	}
+}
+
+func (a *App) TogglePause() {
+	if a.bambuManager != nil {
+		a.bambuManager.TogglePause()
 	}
 }
 
 func (a *App) AssembleVideo(folderName string) error {
-	return a.timelaps.AssembleVideo(folderName)
+	return a.timelapse.AssembleVideo(folderName)
 }
 
 func (a *App) GetAppVersion() string {
@@ -139,11 +153,11 @@ func (a *App) Start() {
 	a.bambucam = printer.NewBambuCamera(a)
 	a.bambucam.Start()
 
-	a.bambustat = printer.NewMqttClient(a)
-	a.bambustat.Start()
+	a.bambuManager = mqtt.NewBambuManager(a)
+	a.bambuManager.Start()
 
-	a.timelaps = printer.NewTimelaps(a)
-	a.timelaps.Start()
+	a.timelapse = timelapse.NewTimelapse(a)
+	a.timelapse.Start()
 
 	a.webserver = web.NewServer(a)
 	a.webserver.Start()
@@ -156,7 +170,7 @@ func (a *App) Restart() {
 
 func (a *App) Stop() {
 	a.bambucam.Stop()
-	a.bambustat.Stop()
+	a.bambuManager.Stop()
 	a.webserver.Stop()
-	a.timelaps.Stop()
+	a.timelapse.Stop()
 }

@@ -51,6 +51,13 @@
         .stat-label { font-size: 0.75rem; color: #888; text-uppercase: uppercase; }
         .stat-value { font-size: 1.1rem; font-weight: 600; color: #eee; }
 
+        button.stat-card:hover {
+            background: rgba(255,255,255,0.08) !important;
+            transform: translateY(-2px);
+        }
+        button.stat-card:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -70,7 +77,7 @@
                 </div>
             </div>
 
-            <div class="stat-card p-3 mb-3 text-center">
+            <div class="stat-card p-2 mb-3 text-center">
                 <small class="stat-label d-block mb-1">Состояние</small>
                 <div id="print-state" class="fw-bold text-info fs-5">Ожидание...</div>
             </div>
@@ -98,6 +105,9 @@
                 <div class="progress" style="height: 6px; background: #222;">
                     <div id="progress-bar" class="progress-bar bg-success" style="width: 0%"></div>
                 </div>
+                <div>
+                    <small id="progress-val" class="text-success fw-bold">Осталось: <span id="time-rem" class="text-white fw-bold">--</span> мин</small>
+                </div>
             </div>
 
             <div class="stat-card p-3 mb-3 d-flex justify-content-between align-items-center">
@@ -111,24 +121,38 @@
                 </div>
             </div>
 
-            <div class="stat-card p-3 mb-3 text-center">
+            <div class="stat-card p-2 mb-3 text-center">
                 <small class="stat-label d-block mb-1">Таймлапсы</small>
                 <div id="timelaps-state" class="fw-bold text-info fs-5">{{if .TimelapseEnabled}}Вкл{{else}}Выкл{{end}}</div>
             </div>
-
-            <div class="stat-card p-3 mb-3 d-flex justify-content-between align-items-center"
-                 onclick="toggleLight()" style="cursor: pointer; transition: 0.2s;">
-                <div>
-                    <small class="stat-label d-block">Подсветка</small>
-                    <div class="stat-value">
-                        <i id="light-icon" class="bi bi-lightbulb"></i>
-                        <span id="light-status">---</span>
+            <hr>
+{{/*        Управление      */}}
+            <div class="mb-3">
+                <button onclick="toggleLight()" class="btn stat-card w-100 py-1 text-white border-0 shadow-none position-relative">
+                    <div id="light-icon-container">
+                        <i id="light-icon" class="bi bi-lightbulb text-secondary fs-4 d-block"></i>
                     </div>
-                </div>
-                <div class="text-end">
-                    <div id="light-spinner" class="spinner-border spinner-border-sm text-success d-none" role="status"></div>
-                </div>
+                    <small class="stat-label">Подсветка: <span id="light-status" class="text-secondary">Off</span></small>
+
+                    <div id="light-spinner" class="spinner-border spinner-border-sm text-success d-none position-absolute"
+                         style="top: 10px; right: 10px;" role="status"></div>
+                </button>
             </div>
+{{/*            <div class="row g-2 mb-3">*/}}
+{{/*                <div class="col-6">*/}}
+{{/*                    <button id="btn-pause" onclick="confirmPause()" class="btn stat-card w-100 py-1 text-white border-0 shadow-none">*/}}
+{{/*                        <i class="bi bi-pause-fill text-info fs-4 d-block"></i>*/}}
+{{/*                        <small class="stat-label">Пауза</small>*/}}
+{{/*                    </button>*/}}
+{{/*                </div>*/}}
+{{/*                <div class="col-6">*/}}
+{{/*                    <button id="btn-stop" onclick="confirmStop()" class="btn stat-card w-100 py-1 text-white border-0 shadow-none">*/}}
+{{/*                        <i class="bi bi-stop-fill text-danger fs-4 d-block"></i>*/}}
+{{/*                        <small class="stat-label">Стоп</small>*/}}
+{{/*                    </button>*/}}
+{{/*                </div>*/}}
+{{/*            </div>*/}}
+            <hr>
 {{/*        Кнопки      */}}
             <ul class="nav nav-pills flex-column mt-4">
                 <li class="mb-2">
@@ -148,7 +172,7 @@
             <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom border-secondary">
                 <div>
                     <h1 class="h3 mb-1" id="task-name">Live Stream</h1>
-                    <small class="text-muted">Хост: {{ .Hostname }} | Осталось: <span id="time-rem" class="text-white fw-bold">--</span> мин</small>
+                    <small class="text-muted">Хост: {{ .Hostname }}</small>
                 </div>
                 <div>
                     <span id="fps-counter" class="stat-card badge px-3 py-2 text-success" style="font-family: monospace;">
@@ -208,17 +232,41 @@
 
     function toggleLight() {
         const spinner = document.getElementById('light-spinner');
-        spinner.classList.remove('d-none'); // Показываем загрузку
+        spinner.classList.remove('d-none');
 
-        fetch('/light', { method: 'POST' })
+        fetch('/printer/light', { method: 'POST' })
             .then(res => {
                 if (!res.ok) throw new Error('Network response was not ok');
             })
             .catch(err => console.error('Ошибка переключения света:', err))
             .finally(() => {
-                // Скрываем спиннер через полсекунды, чтобы пользователь видел отклик
                 setTimeout(() => spinner.classList.add('d-none'), 500);
             });
+    }
+
+    function confirmStop() {
+        if (confirm("ВНИМАНИЕ: Это полностью отменит печать. Вы уверены?")) {
+            const spinner = document.getElementById('light-spinner');
+            spinner.classList.remove('d-none');
+
+            fetch('/printer/stop', { method: 'POST' })
+                .finally(() => setTimeout(() => spinner.classList.add('d-none'), 500));
+        }
+    }
+
+    function confirmPause() {
+        const el = document.getElementById('print-state');
+        const isPaused = el.innerText === 'PAUSE';
+
+        if (!isPaused) {
+            if (!confirm("Приостановить печать?")) return;
+        }
+
+        const spinner = document.getElementById('light-spinner');
+        spinner.classList.remove('d-none');
+
+        fetch('/printer/pause', { method: 'POST' })
+            .finally(() => setTimeout(() => spinner.classList.add('d-none'), 500));
     }
 
     function setOnline(online) {
@@ -275,9 +323,32 @@
                         const icon = document.getElementById('light-icon');
 
                         label.innerText = isOn ? 'On' : 'Off';
-                        label.className = isOn ? 'stat-value text-warning' : 'stat-value text-secondary';
-                        icon.className = isOn ? 'bi bi-lightbulb-fill text-warning' : 'bi bi-lightbulb text-secondary';
+                        label.className = isOn ? 'text-warning' : 'text-secondary';
+
+                        icon.className = isOn ? 'bi bi-lightbulb-fill text-warning fs-4 d-block' : 'bi bi-lightbulb text-secondary fs-4 d-block';
+
+                        icon.parentElement.closest('.stat-card').style.boxShadow = isOn ? '0 0 15px rgba(255, 193, 7, 0.1)' : 'none';
                     }
+                }
+                if(data.gcode_state) {
+                    const el = document.getElementById('print-state');
+                    el.innerText = data.gcode_state;
+                    el.className = (data.gcode_state === 'RUNNING') ? 'fw-bold text-success fs-5' : 'fw-bold text-info fs-5';
+
+                    const btnPause = document.getElementById('btn-pause');
+                    if (data.gcode_state === 'PAUSE') {
+                        btnPause.innerHTML = '<i class="bi bi-play-fill text-success fs-4 d-block"></i><small class="stat-label">Продолжить</small>';
+                    } else {
+                        btnPause.innerHTML = '<i class="bi bi-pause-fill text-info fs-4 d-block"></i><small class="stat-label">Пауза</small>';
+                    }
+
+                    const btnStop = document.getElementById('btn-stop');
+
+                    const isIdle = ['IDLE', 'FINISH', 'FAILED'].includes(data.gcode_state);
+                    btnPause.disabled = isIdle;
+                    btnStop.disabled = isIdle;
+                    btnPause.style.opacity = isIdle ? "0.3" : "1";
+                    btnStop.style.opacity = isIdle ? "0.3" : "1";
                 }
             })
             .catch(e => console.error("Status error"));

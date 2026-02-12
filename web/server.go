@@ -83,7 +83,9 @@ func (s *Server) SetupRouts() {
 	route.GET("/snap", s.SnapHandler)
 
 	route.POST("/config", s.ConfigSetter)
-	route.POST("/light", s.ToggleLight)
+	route.POST("/printer/light", s.ToggleLight)
+	route.POST("/printer/stop", s.StopPrinting)
+	route.POST("/printer/pause", s.TogglePause)
 	route.POST("/assemblevideo", s.HandleAssemble)
 	route.POST("/tl/remove", s.TimelapsRemove)
 }

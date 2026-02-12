@@ -40,9 +40,13 @@ func (s *Server) ConfigSetter(c *gin.Context) {
 	if val, err := strconv.Atoi(c.PostForm("tl_fps")); err == nil {
 		cfg.Timelapse.Fps = val
 	}
+	if val, err := strconv.Atoi(c.PostForm("tl_after_layer")); err == nil {
+		cfg.Timelapse.AfterLayer = val
+	}
 	if val, err := strconv.Atoi(c.PostForm("tl_interval")); err == nil {
 		cfg.Timelapse.Interval = val
 	}
+	cfg.Timelapse.AddTime = c.PostForm("tl_addtime") == "on"
 
 	// Сохраняем и обновляем в памяти
 	s.core.SetConfig(cfg)

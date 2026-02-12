@@ -90,7 +90,7 @@
                         </div>
                     </div>
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Интервал (сек)</label>
                             <input type="number" name="tl_interval" class="form-control" value="{{ .Config.Timelapse.Interval }}">
                             <small>0 - Снимать кадр на каждом слое</small>
@@ -100,10 +100,24 @@
                             <input type="text" name="tl_path" class="form-control" value="{{ .Config.Timelapse.SavePath }}">
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">FPS видео</label>
-                            <input type="text" name="tl_path" class="form-control" value="{{ .Config.Timelapse.Fps }}">
+                            <input type="text" name="tl_fps" class="form-control" value="{{ .Config.Timelapse.Fps }}">
                         </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Снимать после слоя</label>
+                            <input type="text" name="tl_after_layer" class="form-control" value="{{ .Config.Timelapse.AfterLayer }}">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Добавить время на видео</label>
+                            <div class="form-check form-switch">
+                                <label class="form-check-label" for="tl_addtime">Добавить</label>
+                                <input class="form-check-input" type="checkbox" name="tl_addtime" id="tl_addtime" {{ if .Config.Timelapse.AddTime }}checked{{ end }}>
+                            </div>
+                        </div>
+
                         <small>FPS влияет на скорость видео. Пример: 300 кадров и 30 fps, будет 10сек видео</small>
                     </div>
                 </div>
