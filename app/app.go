@@ -14,7 +14,7 @@ import (
 	"syscall"
 )
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 type App struct {
 	cfg       *config.Config
