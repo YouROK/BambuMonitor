@@ -162,8 +162,9 @@ func (t *Timelapse) finalize() {
 
 func (t *Timelapse) saveStatus() {
 	info := TimelapsInfo{
-		Name:   t.currentTask,
-		Status: t.status,
+		Name:      t.currentTask,
+		Status:    t.status,
+		StartedAt: t.startTime,
 	}
 	infoData, _ := json.MarshalIndent(info, "", " ")
 	os.WriteFile(filepath.Join(t.currentFolder, "info.json"), infoData, 0644)
