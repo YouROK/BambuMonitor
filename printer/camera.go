@@ -80,7 +80,7 @@ func (b *BambuCamera) handleConnection(conn net.Conn, authData []byte) {
 	b.core.SetOnline(true)
 	for {
 		// Установка таймаута за какое время должен прочитать
-		tlsConn.SetReadDeadline(time.Now().Add(3 * time.Second))
+		tlsConn.SetReadDeadline(time.Now().Add(5 * time.Second))
 		// 1. Читаем 16-байтный заголовок Bambu
 		header := make([]byte, 16)
 		if _, err := io.ReadFull(tlsConn, header); err != nil {

@@ -17,6 +17,8 @@ type Core interface {
 	SetConfig(cfg *config.Config)
 
 	ToggleLight()
+	StopPrinting()
+	TogglePause()
 
 	AssembleVideo(folderName string) error
 
