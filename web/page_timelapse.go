@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/dustin/go-humanize"
 	"github.com/gin-gonic/gin"
 )
 
@@ -44,6 +45,7 @@ func (s *Server) TimelapsHandler(c *gin.Context) {
 		HasVideo   bool
 		FrameCount int
 		Thumbnail  string
+		Size       string
 	}
 
 	var list []TimelapseView
@@ -65,13 +67,18 @@ func (s *Server) TimelapsHandler(c *gin.Context) {
 			frames, _ := filepath.Glob(filepath.Join(fullPath, "layer_*.jpg"))
 
 			// Проверяем наличие видео
-			_, videoErr := os.Stat(filepath.Join(fullPath, "timelapse.mp4"))
+			st, videoErr := os.Stat(filepath.Join(fullPath, "timelapse.mp4"))
+			size := uint64(0)
+			if st != nil {
+				size = uint64(st.Size())
+			}
 
 			view := TimelapseView{
 				FolderName: entry.Name(),
 				Name:       info.Name,
 				Date:       info.StartedAt.Format("02.01.2006 15:04"),
 				Status:     info.Status.String(),
+				Size:       humanize.Bytes(size),
 				HasVideo:   videoErr == nil,
 				FrameCount: len(frames),
 			}
