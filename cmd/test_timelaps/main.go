@@ -3,6 +3,7 @@ package main
 import (
 	"bambucam/config"
 	"bambucam/printer"
+	"bambucam/printer/timelapse"
 	"log"
 	"os"
 	"sync"
@@ -18,8 +19,8 @@ type MockApp struct {
 	frameMutex  sync.RWMutex
 	statusMutex sync.RWMutex
 
-	bambucam *printer.BambuCamera
-	timelaps *printer.Timelaps
+	bambucam  *printer.BambuCamera
+	timelapse *timelapse.Timelapse
 }
 
 func (a *MockApp) GetFrame() []byte {
@@ -64,10 +65,19 @@ func (a *MockApp) SetConfig(cfg *config.Config) {
 	}
 }
 
-func (a *MockApp) ToggleLight() {}
+func (a *MockApp) ToggleLight()  {}
+func (a *MockApp) StopPrinting() {}
+func (a *MockApp) TogglePause()  {}
+func (a *MockApp) IsOnline() bool {
+	return true
+}
+func (a *MockApp) SetOnline(online bool) {}
+func (a *MockApp) GetAppVersion() string {
+	return "Test timelapse"
+}
 
 func (a *MockApp) AssembleVideo(folderName string) error {
-	return a.timelaps.AssembleVideo(folderName)
+	return a.timelapse.AssembleVideo(folderName)
 }
 
 func (a *MockApp) Run() {
@@ -77,7 +87,7 @@ func (a *MockApp) Run() {
 
 	a.UpdateStatus(map[string]any{
 		"gcode_state":  "RUNNING",
-		"subtask_name": "TestCube",
+		"subtask_name": "TestTimelapse",
 		"layer_num":    1.0,
 	})
 
@@ -105,8 +115,8 @@ func (a *MockApp) Start() {
 	a.bambucam = printer.NewBambuCamera(a)
 	a.bambucam.Start()
 
-	a.timelaps = printer.NewTimelaps(a)
-	a.timelaps.Start()
+	a.timelapse = timelapse.NewTimelapse(a)
+	a.timelapse.Start()
 }
 
 func (a *MockApp) Restart() {
@@ -116,7 +126,7 @@ func (a *MockApp) Restart() {
 
 func (a *MockApp) Stop() {
 	a.bambucam.Stop()
-	a.timelaps.Stop()
+	a.timelapse.Stop()
 }
 
 func main() {
@@ -128,7 +138,8 @@ func main() {
 
 	// 1. Инициализация конфига
 	cfg.Timelapse.Enabled = true
-	cfg.Timelapse.Interval = 0
+	cfg.Timelapse.Interval = 1
+	cfg.Timelapse.Fps = 5
 	cfg.Timelapse.SavePath = "./timelapse"
 
 	mock := &MockApp{
