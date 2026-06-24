@@ -46,8 +46,35 @@
             background: #000;
             border-radius: 10px 10px 0 0;
         }
-        .thumb-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
-        .status-badge { position: absolute; top: 10px; right: 10px; font-size: 0.7rem; }
+
+        .thumb-container img,
+        .thumb-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s ease;
+        }
+
+        .thumb-container img {
+            opacity: 0.8;
+            z-index: 1;
+        }
+
+        .thumb-container video {
+            opacity: 0;
+            z-index: 2;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            z-index: 3;
+        }
     </style>
 </head>
 <body>
@@ -66,10 +93,19 @@
                 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
                     {{ range .Timelapses }}
                         <div class="col">
-                            <div class="card h-100" onclick="playVideo(event, '/tl/video/{{ .FolderName }}/timelapse.mp4', '{{ .Name }}')">
+                            <div class="card h-100" onclick="playVideo(event, '/tl/file/{{ .FolderName }}/timelapse.mp4', '{{ .Name }}')">
                                 <div class="thumb-container">
                                     {{ if .Thumbnail }}
-                                        <img src="/tl/thumb/{{ .Thumbnail }}" alt="Preview">
+                                        <img src="/tl/file/{{ .Thumbnail }}" class="thumb-img" alt="Preview">
+
+                                        {{ if .HasPreview }}
+                                            <video class="thumb-video"
+                                                   data-src="/tl/file/{{ .FolderName }}/preview.mp4"
+                                                   muted
+                                                   loop
+                                                   playsinline>
+                                            </video>
+                                        {{ end }}
                                     {{ else }}
                                         <div class="d-flex h-100 align-items-center justify-content-center text-muted small">Нет кадров</div>
                                     {{ end }}
@@ -87,15 +123,15 @@
 
                                     <div class="d-flex justify-content-between align-items-center mt-3">
                                         <span class="small text-light opacity-75">{{ .FrameCount }} кадров</span>
-                                        <div >
+                                        <div>
                                             {{ if .HasVideo }}
-                                                <a href="/tl/video/{{ .FolderName }}/timelapse.mp4"
+                                                <a href="/tl/file/{{ .FolderName }}/timelapse.mp4"
                                                    download="{{ .Name }}.mp4"
                                                    onclick="event.stopPropagation();"
                                                    class="btn btn-sm btn-outline-light" title="Скачать">
                                                     <i class="bi bi-download"></i>
                                                 </a>
-                                                <button onclick="playVideo(event, '/tl/video/{{ .FolderName }}/timelapse.mp4', '{{ .Name }}')" class="btn btn-sm btn-success">
+                                                <button onclick="playVideo(event, '/tl/file/{{ .FolderName }}/timelapse.mp4', '{{ .Name }}')" class="btn btn-sm btn-success">
                                                     <i class="bi bi-play-fill"></i>
                                                 </button>
                                             {{ else }}
@@ -214,7 +250,43 @@
         videoModal = new bootstrap.Modal(document.getElementById('videoModal'));
         player = document.getElementById('player');
         videoTitle = document.getElementById('videoTitle');
+
+        initHoverPreviews();
     });
+
+    function initHoverPreviews() {
+        document.querySelectorAll('.card').forEach(card => {
+            const video = card.querySelector('.thumb-video');
+            const img = card.querySelector('.thumb-img');
+
+            if (!video) return;
+
+            // Наведение мыши
+            card.addEventListener('mouseenter', () => {
+                video.src = video.dataset.src;
+                video.load();
+
+                video.play()
+                    .then(() => {
+                        video.style.opacity = "1";
+                        if (img) img.style.opacity = "0";
+                    })
+                    .catch(err => {
+                        console.log("Превью не может быть воспроизведено:", err);
+                    });
+            });
+
+            card.addEventListener('mouseleave', () => {
+                video.pause();
+
+                video.src = "";
+                video.load();
+
+                video.style.opacity = "0";
+                if (img) img.style.opacity = "0.8";
+            });
+        });
+    }
 
     function playVideo(event, url, title) {
         event.stopPropagation();

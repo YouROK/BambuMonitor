@@ -78,8 +78,7 @@ func (s *Server) SetupRouts() {
 	route.GET("/config", s.ConfigHandler)
 	route.GET("/status", s.PrinterStatus)
 	route.GET("/timelapse", s.TimelapsHandler)
-	route.GET("/tl/thumb/*path", s.TimelapsThumbnail)
-	route.GET("/tl/video/*path", s.TimelapsVideo)
+	route.GET("/tl/file/*path", s.TimelapsFile)
 	route.GET("/snap", s.SnapHandler)
 
 	route.POST("/config", s.ConfigSetter)

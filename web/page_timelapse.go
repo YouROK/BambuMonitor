@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/gin-gonic/gin"
@@ -40,9 +41,11 @@ func (s *Server) TimelapsHandler(c *gin.Context) {
 	type TimelapseView struct {
 		FolderName string
 		Name       string
+		StartedAt  time.Time
 		Date       string
 		Status     string
 		HasVideo   bool
+		HasPreview bool
 		FrameCount int
 		Thumbnail  string
 		Size       string
@@ -73,13 +76,17 @@ func (s *Server) TimelapsHandler(c *gin.Context) {
 				size = uint64(st.Size())
 			}
 
+			_, previewErr := os.Stat(filepath.Join(fullPath, "preview.mp4"))
+
 			view := TimelapseView{
 				FolderName: entry.Name(),
 				Name:       info.Name,
+				StartedAt:  info.StartedAt,
 				Date:       info.StartedAt.Format("02.01.2006 15:04"),
 				Status:     info.Status.String(),
 				Size:       humanize.Bytes(size),
 				HasVideo:   videoErr == nil,
+				HasPreview: previewErr == nil,
 				FrameCount: len(frames),
 			}
 
@@ -93,7 +100,7 @@ func (s *Server) TimelapsHandler(c *gin.Context) {
 	}
 
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].Date > list[j].Date
+		return list[i].StartedAt.After(list[j].StartedAt)
 	})
 
 	c.HTML(http.StatusOK, "timelaps.go.html", gin.H{
@@ -102,7 +109,7 @@ func (s *Server) TimelapsHandler(c *gin.Context) {
 	})
 }
 
-func (s *Server) TimelapsThumbnail(c *gin.Context) {
+func (s *Server) TimelapsFile(c *gin.Context) {
 	filePath := c.Param("path")
 	filePath = filepath.Clean(filePath)
 	savePath := s.core.GetConfig().Timelapse.SavePath
@@ -114,12 +121,6 @@ func (s *Server) TimelapsThumbnail(c *gin.Context) {
 		return
 	}
 
-	c.File(fullPath)
-}
-
-func (s *Server) TimelapsVideo(c *gin.Context) {
-	filePath := filepath.Clean(c.Param("path"))
-	fullPath := filepath.Join(s.core.GetConfig().Timelapse.SavePath, filePath)
 	c.File(fullPath)
 }
 
