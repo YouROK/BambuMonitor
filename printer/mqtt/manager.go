@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"strconv"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -38,6 +39,10 @@ func (m *BambuManager) Start() {
 	opts.SetClientID("go-bambu-monitor-" + serial)
 	opts.SetCleanSession(true)
 
+	opts.SetAutoReconnect(true)
+	opts.SetConnectRetry(true)
+	opts.SetConnectRetryInterval(5 * time.Second)
+
 	opts.OnConnect = func(c mqtt.Client) {
 		log.Printf("[MQTT] Успешно подключено к %s", serial)
 
@@ -46,6 +51,12 @@ func (m *BambuManager) Start() {
 
 		m.RequestAllStatus()
 	}
+	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
+		log.Printf("[MQTT] Связь потеряна: %v. Ожидание восстановления...", err)
+	})
+	opts.SetReconnectingHandler(func(c mqtt.Client, options *mqtt.ClientOptions) {
+		log.Println("[MQTT] Попытка повторного подключения к принтеру...")
+	})
 
 	m.client = mqtt.NewClient(opts)
 	token := m.client.Connect()
@@ -61,7 +72,8 @@ func (m *BambuManager) Stop() {
 
 func (m *BambuManager) handleMessageStatus(client mqtt.Client, msg mqtt.Message) {
 	var fullStatus map[string]interface{}
-	if err := json.Unmarshal(msg.Payload(), &fullStatus); err != nil {
+	buf := msg.Payload()
+	if err := json.Unmarshal(buf, &fullStatus); err != nil {
 		return
 	}
 
@@ -77,7 +89,7 @@ func (m *BambuManager) sendPrintCommand(topic string, payload map[string]any) mq
 	var token mqtt.Token
 	if m.client != nil && m.client.IsConnected() {
 		token = m.client.Publish(topic, 0, false, body)
-		log.Println("[MQTT] Команда отправлена:\n", body)
+		log.Println("[MQTT] Команда отправлена:\n", string(body))
 	}
 	return token
 }
