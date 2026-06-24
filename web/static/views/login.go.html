@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вход | Bambu Monitor</title>
+
+    <link rel="icon" type="image/png" href="/st/img/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/st/img/favicon.svg" />
+    <link rel="shortcut icon" href="/st/img/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/st/img/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bambu Monitor" />
+    <link rel="manifest" href="/st/img/site.webmanifest" />
+
+    <link rel="stylesheet" href="/st/css/bootstrap.min.css">
+    <style>
+        body { background-color: #0f0f0f; color: #eee; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: #161616; border: 1px solid #2d2d2d; border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 400px; }
+    </style>
+</head>
+<body>
+<div class="login-card">
+    <h3 class="text-center mb-4 text-white">Bambu Monitor</h3>
+
+    <!-- Вывод ошибки, если она передана из бэкенда -->
+    {{ if .Error }}
+        <div class="alert alert-danger py-2 text-center small mb-3 border-danger bg-danger bg-opacity-10 text-danger" role="alert">
+            {{ .Error }}
+        </div>
+    {{ end }}
+
+    <form action="/login" method="POST">
+        <div class="mb-3">
+            <label class="form-label text-light">Имя пользователя</label>
+            <input type="text" name="username" class="form-control bg-dark border-secondary text-white" required autofocus>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-light">Пароль</label>
+            <input type="password" name="password" class="form-control bg-dark border-secondary text-white" required>
+        </div>
+        <button type="submit" class="btn btn-success w-100 mt-3">Войти</button>
+    </form>
+</div>
+</body>
+</html>

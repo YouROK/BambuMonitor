@@ -66,25 +66,25 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) SetupRouts() {
-	var route *gin.RouterGroup
-	if s.core.GetConfig().Web.Username != "" && s.core.GetConfig().Web.Username != "" {
-		route = s.Router.Group("/", gin.BasicAuth(gin.Accounts{
-			s.core.GetConfig().Web.Username: s.core.GetConfig().Web.Password,
-		}))
-	} else {
-		route = s.Router.Group("/")
-	}
-	route.GET("/", s.IndexHandler)
-	route.GET("/config", s.ConfigHandler)
-	route.GET("/status", s.PrinterStatus)
-	route.GET("/timelapse", s.TimelapsHandler)
-	route.GET("/tl/file/*path", s.TimelapsFile)
-	route.GET("/snap", s.SnapHandler)
+	s.Router.GET("/login", s.LoginGetHandler)
+	s.Router.POST("/login", s.LoginPostHandler)
+	s.Router.GET("/logout", s.LogoutHandler)
 
-	route.POST("/config", s.ConfigSetter)
-	route.POST("/printer/light", s.ToggleLight)
-	route.POST("/printer/stop", s.StopPrinting)
-	route.POST("/printer/pause", s.TogglePause)
-	route.POST("/assemblevideo", s.HandleAssemble)
-	route.POST("/tl/remove", s.TimelapsRemove)
+	protected := s.Router.Group("/")
+	protected.Use(s.AuthMiddleware())
+	{
+		protected.GET("/", s.IndexHandler)
+		protected.GET("/config", s.ConfigHandler)
+		protected.GET("/status", s.PrinterStatus)
+		protected.GET("/timelapse", s.TimelapsHandler)
+		protected.GET("/tl/file/*path", s.TimelapsFile)
+		protected.GET("/snap", s.SnapHandler)
+
+		protected.POST("/config", s.ConfigSetter)
+		protected.POST("/printer/light", s.ToggleLight)
+		protected.POST("/printer/stop", s.StopPrinting)
+		protected.POST("/printer/pause", s.TogglePause)
+		protected.POST("/assemblevideo", s.HandleAssemble)
+		protected.POST("/tl/remove", s.TimelapsRemove)
+	}
 }

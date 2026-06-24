@@ -184,11 +184,15 @@
                     <h1 class="h3 mb-1" id="task-name">Live Stream</h1>
                     <small class="text-muted">Хост: {{ .Hostname }}</small>
                 </div>
-                <div>
-                    <span id="fps-counter" class="stat-card badge px-3 py-2 text-success" style="font-family: monospace;">
+
+                <div class="d-flex align-items-center">
+                    <span id="fps-counter" class="stat-card badge px-3 py-2 text-success me-2" style="font-family: monospace;">
                         -- FPS
                     </span>
-                    <span id="stream-status-badge" class="badge bg-secondary px-3 py-2">OFFLINE</span>
+                    <span id="stream-status-badge" class="badge bg-secondary px-3 py-2 me-2">OFFLINE</span>
+                    <a href="/logout" class="badge bg-danger px-3 me-2 d-inline-flex align-items-center" title="Выйти" style="text-decoration: none; padding-top: 5px; padding-bottom: 5px;">
+                        <i class="bi bi-box-arrow-right" style="font-size: 1.15rem; line-height: 1;"></i>
+                    </a>
                 </div>
             </div>
 
