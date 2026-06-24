@@ -3,6 +3,7 @@ package web
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,7 @@ func (s *Server) ConfigSetter(c *gin.Context) {
 	}
 	cfg.Web.Username = c.PostForm("web_username")
 	cfg.Web.Password = c.PostForm("web_password")
+	cfg.Web.Hostname = c.PostForm("web_hostname")
 
 	// Таймлапс
 	// Чекбоксы в HTML приходят как "on", если включены, или отсутствуют вовсе
@@ -47,6 +49,20 @@ func (s *Server) ConfigSetter(c *gin.Context) {
 		cfg.Timelapse.Interval = val
 	}
 	cfg.Timelapse.AddTime = c.PostForm("tl_addtime") == "on"
+
+	cfg.Telegram.Token = c.PostForm("tg_token")
+	cfg.Telegram.AdminIds = nil
+	tgids := c.PostForm("tg_adminids")
+	arr := strings.Split(tgids, ",")
+	for _, s := range arr {
+		ids := strings.TrimSpace(s)
+		if ids != "" {
+			id, err := strconv.ParseInt(ids, 10, 64)
+			if err == nil {
+				cfg.Telegram.AdminIds = append(cfg.Telegram.AdminIds, id)
+			}
+		}
+	}
 
 	// Сохраняем и обновляем в памяти
 	s.core.SetConfig(cfg)

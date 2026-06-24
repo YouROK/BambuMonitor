@@ -60,7 +60,11 @@
                     <h3 class="h5 section-title">Веб-сервер и Доступ</h3>
 
                     <div class="row g-3 mb-4">
-                        <div class="col-md-8">
+                        <div class="col-md-4">
+                            <label class="form-label">Host</label>
+                            <input type="text" name="web_hostname" class="form-control" value="{{ .Config.Web.Hostname }}">
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label">Bind Address (IP)</label>
                             <input type="text" name="web_address" class="form-control" value="{{ .Config.Web.BindAddress }}">
                         </div>
@@ -129,6 +133,26 @@
                         </div>
 
                         <small>FPS влияет на скорость видео. Пример: 300 кадров и 30 fps, будет 10сек видео</small>
+                    </div>
+                </div>
+
+                <div class="config-section shadow border-info border-opacity-25">
+                    <h3 class="h5 section-title">Телеграм бот</h3>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Токен</label>
+                            <input type="text" name="tg_token" class="form-control" value="{{ .Config.Telegram.Token }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">ID админов через запятую</label>
+                            <input type="text" name="tg_adminids" class="form-control" value="{{ range $i, $id := .Config.Telegram.AdminIds }}{{ if $i }}, {{ end }}{{ $id }}{{ end }}">
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-warning opacity-75">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <small>Токен нужно получить в @BotFather. ID админов, им будут приходить сообщения и только они смогут управлять ботом</small>
                     </div>
                 </div>
 
