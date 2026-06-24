@@ -77,7 +77,11 @@ func (a *MockApp) GetAppVersion() string {
 }
 
 func (a *MockApp) AssembleVideo(folderName string) error {
-	return a.timelapse.AssembleVideo(folderName)
+	err := a.timelapse.AssembleVideo(folderName)
+	if err != nil {
+		return err
+	}
+	return a.timelapse.AssemblePreview(folderName)
 }
 
 func (a *MockApp) Run() {

@@ -151,8 +151,15 @@ func (t *Timelapse) finalize() {
 			t.saveStatus()
 			log.Println("[Timelapse] Ошибка сборки видео:", err)
 		} else {
-			t.status = TL_FINISHED
-			t.saveStatus()
+			err := t.AssemblePreview(folderName)
+			if err != nil {
+				t.status = TL_ERROR
+				t.saveStatus()
+				log.Println("[Timelapse] Ошибка сборки видео:", err)
+			} else {
+				t.status = TL_FINISHED
+				t.saveStatus()
+			}
 		}
 		t.status = TL_IDLE
 		t.currentTask = ""
