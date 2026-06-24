@@ -5,6 +5,7 @@ import (
 	"bambucam/printer"
 	"bambucam/printer/mqtt"
 	"bambucam/printer/timelapse"
+	"bambucam/tgbot"
 	"bambucam/web"
 	"log"
 	"os"
@@ -30,6 +31,7 @@ type App struct {
 	bambuManager *mqtt.BambuManager
 	bambucam     *printer.BambuCamera
 	timelapse    *timelapse.Timelapse
+	telega       *tgbot.Telegram
 }
 
 func New() *App {
@@ -124,7 +126,11 @@ func (a *App) TogglePause() {
 }
 
 func (a *App) AssembleVideo(folderName string) error {
-	return a.timelapse.AssembleVideo(folderName)
+	err := a.timelapse.AssembleVideo(folderName)
+	if err != nil {
+		return err
+	}
+	return a.timelapse.AssemblePreview(folderName)
 }
 
 func (a *App) GetAppVersion() string {
@@ -150,6 +156,12 @@ func (a *App) Start() {
 		os.Exit(1)
 	}
 
+	a.webserver = web.NewServer(a)
+	a.webserver.Start()
+
+	a.telega = tgbot.NewTelegram(a)
+	a.telega.Start()
+
 	a.bambucam = printer.NewBambuCamera(a)
 	a.bambucam.Start()
 
@@ -158,9 +170,6 @@ func (a *App) Start() {
 
 	a.timelapse = timelapse.NewTimelapse(a)
 	a.timelapse.Start()
-
-	a.webserver = web.NewServer(a)
-	a.webserver.Start()
 }
 
 func (a *App) Restart() {
@@ -169,8 +178,9 @@ func (a *App) Restart() {
 }
 
 func (a *App) Stop() {
+	a.webserver.Stop()
+	a.telega.Stop()
+	a.timelapse.Stop()
 	a.bambucam.Stop()
 	a.bambuManager.Stop()
-	a.webserver.Stop()
-	a.timelapse.Stop()
 }

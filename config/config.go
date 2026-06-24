@@ -17,6 +17,7 @@ type Config struct {
 	} `yaml:"printer"`
 
 	Web struct {
+		Hostname    string `yaml:"hostname"`
 		BindAddress string `yaml:"bind_address"`
 		Port        int    `yaml:"port"`
 		Username    string `yaml:"username"`
@@ -31,6 +32,11 @@ type Config struct {
 		AfterLayer int    `yaml:"after_layer"`
 		AddTime    bool   `yaml:"add_time"`
 	} `yaml:"timelapse"`
+
+	Telegram struct {
+		Token    string  `yaml:"token"`
+		AdminIds []int64 `yaml:"admin_ids"`
+	} `yaml:"telegram"`
 }
 
 // DefaultConfig возвращает настройки по умолчанию
