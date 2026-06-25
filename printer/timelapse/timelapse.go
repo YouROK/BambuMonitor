@@ -38,7 +38,9 @@ func (t *Timelapse) Start() {
 }
 
 func (t *Timelapse) Stop() {
-	close(t.stop)
+	if t != nil && t.stop != nil {
+		close(t.stop)
+	}
 }
 
 func (t *Timelapse) worker() {
